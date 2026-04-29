@@ -540,7 +540,7 @@
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2hCXxPV-ba_uoKDsFjdVcsrVYHtW-fi2-rS73rljFivNxjmJ4F0rQXsqOv5AEx6L9Ig/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHq4FQK3E1Ig7U8zXe7ctnbgVJtEZskTyTeqv_e1Q1jq3qRjwLE7I1cG8pqJTDK-pQYg/exec';
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -586,14 +586,20 @@ function renderTimeGrid(booked = []) {
   grid.innerHTML = '';
   selectedTime = null;
 
+  const selectedDate = document.getElementById('date').value;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isToday = selectedDate === todayStr;
+  const nowMins = isToday ? new Date().getHours() * 60 + new Date().getMinutes() : 0;
+
   HOURS.forEach(slot => {
     const div = document.createElement('div');
     div.className = 'time-slot';
     div.textContent = slot;
+    const isPast = isToday && toMins(slot) <= nowMins;
     const isBooked = isSlotBooked(slot, duration, booked);
-    if (isBooked) {
+    if (isPast || isBooked) {
       div.classList.add('booked');
-      div.title = 'Already booked';
+      div.title = isPast ? 'Time has passed' : 'Already booked';
     } else {
       div.onclick = () => selectTime(div, slot);
     }
