@@ -257,17 +257,6 @@
   }
   .time-label { font-size: 12px; color: var(--ink-light); margin-bottom: 6px; }
   .time-section.hidden { display: none; }
-  .fullday-notice {
-    display: none;
-    background: var(--accent-light);
-    border: 1px solid rgba(45,106,79,0.2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--accent);
-    margin-top: 4px;
-  }
-  .fullday-notice.visible { display: block; }
   .slots-legend {
     display: flex; gap: 16px; font-size: 12px; color: var(--ink-light); margin-top: 8px;
   }
@@ -350,6 +339,17 @@
     color: var(--ink-light);
     text-align: right;
     white-space: nowrap;
+  }
+  .bookings-group { margin-bottom: 1.5rem; }
+  .bookings-group-header {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
   }
   .empty-state {
     text-align: center;
@@ -463,10 +463,14 @@
         <div class="field">
           <label>Duration</label>
           <select id="duration" onchange="onDurationChange()">
-            <option value="1">1 hour</option>
-            <option value="2" selected>2 hours</option>
+            <option value="1" selected>1 hour</option>
+            <option value="2">2 hours</option>
             <option value="3">3 hours</option>
             <option value="4">4 hours</option>
+            <option value="5">5 hours</option>
+            <option value="6">6 hours</option>
+            <option value="7">7 hours</option>
+            <option value="8">8 hours</option>
             <option value="24">Full day</option>
           </select>
         </div>
@@ -483,9 +487,6 @@
             <span><span class="dot" style="background:rgba(26,26,24,0.08)"></span>Booked</span>
           </div>
         </div>
-      </div>
-      <div class="fullday-notice" id="fullday-notice">
-        Full day booking — the space will be reserved for the entire day (00:00–24:00).
       </div>
 
       <div class="summary-box" id="summary-box">
@@ -526,12 +527,9 @@
   <div class="panel" id="panel-view">
     <div class="filter-bar">
       <div class="field">
-        <label>Filter by space</label>
-        <select id="filter-resource" onchange="loadBookings()">
-          <option value="">All spaces</option>
-          <option>Basement Meeting Room</option>
-          <option>Basement Restaurant Area</option>
-          <option>Rooftop Terrace</option>
+        <label>Show</label>
+        <select id="filter-month" onchange="loadBookings()">
+          <option value="">All upcoming</option>
         </select>
       </div>
     </div>
@@ -542,7 +540,7 @@
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxucbg1gjRmLHUJVH5qAiDsrB38lvLOx-q9XGIzrRbZ_T0w_5k6U95GAa4IrvoUkDXFVA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqJGUwkOv7J97c2-JSsMEy0coO1kiGkXoa2K95NQJ0LzI2LhaHtVGG2Sqtstrk-FkOOA/exec';
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -650,7 +648,6 @@ function updateSummary() {
 function onDurationChange() {
   const isFullDay = document.getElementById('duration').value === '24';
   document.getElementById('time-section').classList.toggle('hidden', isFullDay);
-  document.getElementById('fullday-notice').classList.toggle('visible', isFullDay);
   if (isFullDay) {
     selectedTime = '00:00';
   } else {
@@ -745,54 +742,85 @@ async function submitBooking() {
 }
 
 async function loadBookings() {
-  const resource = document.getElementById('filter-resource').value;
+  const filterMonth = document.getElementById('filter-month').value;
   const list = document.getElementById('bookings-list');
   list.innerHTML = '<div class="empty-state">Loading…</div>';
 
   try {
     const today = new Date().toISOString().split('T')[0];
-    // Try getFutureBookings first; fall back to getAllBookings for older deployments
     let url = `${SCRIPT_URL}?action=getFutureBookings&from=${today}`;
-    if (resource) url += `&resource=${encodeURIComponent(resource)}`;
     const res = await fetch(url);
     const data = await res.json();
+    let bookings = [];
     if (data.error) {
-      // Older deployment — fall back to getAllBookings with today's date
-      let fallbackUrl = `${SCRIPT_URL}?action=getAllBookings&date=${today}`;
-      if (resource) fallbackUrl += `&resource=${encodeURIComponent(resource)}`;
-      const res2 = await fetch(fallbackUrl);
+      const res2 = await fetch(`${SCRIPT_URL}?action=getAllBookings&date=${today}`);
       const data2 = await res2.json();
-      renderBookingsList(data2.bookings || []);
+      bookings = data2.bookings || [];
     } else {
-      renderBookingsList(data.bookings || []);
+      bookings = data.bookings || [];
     }
+    // Populate month filter from actual bookings
+    populateMonthFilter(bookings);
+    // Apply month filter if set
+    if (filterMonth) {
+      bookings = bookings.filter(b => b.date && b.date.slice(0, 7) === filterMonth);
+    }
+    renderBookingsList(bookings);
   } catch (e) {
     renderBookingsList([]);
   }
 }
 
+function populateMonthFilter(bookings) {
+  const sel = document.getElementById('filter-month');
+  const current = sel.value;
+  // Collect unique months from bookings
+  const months = [...new Set(bookings.map(b => b.date ? b.date.slice(0, 7) : '').filter(Boolean))].sort();
+  // Rebuild options preserving selection
+  sel.innerHTML = '<option value="">All upcoming</option>';
+  months.forEach(m => {
+    const [y, mo] = m.split('-');
+    const label = new Date(y, mo - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = label;
+    if (m === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
 // ─── RENDER HELPERS ───────────────────────────────────────────────────────────
+const RESOURCES = ['Basement Meeting Room', 'Basement Restaurant Area', 'Rooftop Terrace'];
+
 function renderBookingsList(bookings) {
   const list = document.getElementById('bookings-list');
   if (!bookings.length) {
-    list.innerHTML = '<div class="empty-state">📭<p>No upcoming bookings.</p></div>';
+    list.innerHTML = '<div class="empty-state">No upcoming bookings.</div>';
     return;
   }
   bookings.sort((a,b) => (a.date + a.start).localeCompare(b.date + b.start));
-  list.innerHTML = bookings.map(b => `
-    <div class="booking-item">
-      <div class="booking-dot"></div>
-      <div class="booking-info">
-        <h4>${b.resource}</h4>
-        <p>${b.name} · ${b.company}</p>
-        ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
-      </div>
-      <div class="booking-time">
-        <div style="font-weight:500;">${formatDate(b.date)}</div>
-        <div>${formatTime(b.start)}–${formatTime(b.end)}</div>
-      </div>
-    </div>
-  `).join('');
+
+  let html = '';
+  RESOURCES.forEach(resource => {
+    const group = bookings.filter(b => b.resource === resource);
+    if (!group.length) return;
+    html += `<div class="bookings-group">
+      <div class="bookings-group-header">${resource}</div>
+      ${group.map(b => `
+        <div class="booking-item">
+          <div class="booking-dot"></div>
+          <div class="booking-info">
+            <p>${b.name} · ${b.company}</p>
+            ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
+          </div>
+          <div class="booking-time">
+            <div style="font-weight:500;">${formatDate(b.date)}</div>
+            <div>${formatTime(b.start)}–${formatTime(b.end)}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  });
+  list.innerHTML = html;
 }
 
 function formatDate(dateStr) {
