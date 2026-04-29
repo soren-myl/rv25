@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Space</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F5F0E8;
+    --ink: #1A1A18;
+    --ink-light: #5A5A55;
+    --accent: #2D6A4F;
+    --accent-light: #D8EDD4;
+    --accent-mid: #52B788;
+    --warn: #C0392B;
+    --warn-light: #FDECEA;
+    --border: rgba(26,26,24,0.12);
+    --card-bg: #FFFFFF;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--accent-mid); }
+  .header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* LAYOUT */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .page-intro {
+    margin-bottom: 2.5rem;
+  }
+  .page-intro h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .page-intro p {
+    color: var(--ink-light);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(26,26,24,0.07);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 2rem;
+    width: fit-content;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink-light);
+    font-weight: 400;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: white;
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* RESOURCE CARDS */
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 1rem;
+  }
+
+  .resource-card {
+    background: white;
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .resource-card:hover { border-color: var(--accent-mid); }
+  .resource-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .resource-card .check {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+  }
+  .resource-card.selected .check { display: flex; }
+  .resource-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .resource-card h3 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .resource-card p {
+    font-size: 13px;
+    color: var(--ink-light);
+    font-weight: 300;
+    line-height: 1.45;
+  }
+  .resource-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 11px;
+    background: rgba(26,26,24,0.07);
+    color: var(--ink-light);
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 400;
+  }
+  .resource-card.selected .tag {
+    background: rgba(45,106,79,0.12);
+    color: var(--accent);
+  }
+
+  /* FORM */
+  .booking-form {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    border: 1px solid var(--border);
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media(max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-light);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,106,79,0.10);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .time-slot {
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+    color: var(--ink);
+    user-select: none;
+  }
+  .time-slot:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+  .time-slot.selected { background: var(--accent); color: white; border-color: var(--accent); }
+  .time-slot.booked {
+    background: rgba(26,26,24,0.05);
+    color: rgba(26,26,24,0.25);
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+  .time-label { font-size: 12px; color: var(--ink-light); margin-bottom: 6px; }
+  .time-section.hidden { display: none; }
+  .fullday-notice {
+    display: none;
+    background: var(--accent-light);
+    border: 1px solid rgba(45,106,79,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .fullday-notice.visible { display: block; }
+  .slots-legend {
+    display: flex; gap: 16px; font-size: 12px; color: var(--ink-light); margin-top: 8px;
+  }
+  .slots-legend span { display: flex; align-items: center; gap: 5px; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* SUMMARY BOX */
+  .summary-box {
+    background: var(--accent-light);
+    border: 1px solid rgba(45,106,79,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    display: none;
+  }
+  .summary-box.visible { display: block; }
+  .summary-box strong { color: var(--accent); }
+
+  /* SUBMIT */
+  .btn-submit {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .btn-submit:hover { background: var(--accent); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SUCCESS / ERROR */
+  .alert {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-success { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(45,106,79,0.25); }
+  .alert-error { background: var(--warn-light); color: var(--warn); border: 1px solid rgba(192,57,43,0.2); }
+  .alert h4 { font-weight: 500; margin-bottom: 4px; }
+
+  /* VIEW BOOKINGS PANEL */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .filter-bar .field { margin-bottom: 0; flex: 1; min-width: 160px; }
+
+  .bookings-list { display: flex; flex-direction: column; gap: 10px; }
+  .booking-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .booking-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .booking-info h4 { font-size: 14px; font-weight: 500; }
+  .booking-info p { font-size: 13px; color: var(--ink-light); }
+  .booking-time {
+    font-size: 13px;
+    color: var(--ink-light);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ink-light);
+    font-size: 14px;
+  }
+  .empty-state p { margin-top: 8px; }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .section-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  /* MOBILE */
+  @media(max-width: 600px) {
+    header { padding: 1rem; }
+    main { padding: 1.5rem 1rem; }
+    .page-intro h1 { font-size: 1.7rem; }
+    .booking-item { grid-template-columns: auto 1fr; }
+    .booking-time { grid-column: 2; }
+    .tabs { width: 100%; }
+    .tab-btn { flex: 1; text-align: center; font-size: 13px; padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Rosenvængets Alle <span>25</span></div>
+  </div>
+  <div class="header-sub">Building resources</div>
+</header>
+
+<main>
+  <div class="page-intro">
+    <h1>Book a space</h1>
+    <p>Reserve shared areas for your company — no login required.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('book')">Make a booking</button>
+    <button class="tab-btn" onclick="switchTab('view')">View bookings</button>
+  </div>
+
+  <!-- BOOK PANEL -->
+  <div class="panel active" id="panel-book">
+
+    <div id="alert-success" class="alert alert-success">
+      <h4>Booking confirmed!</h4>
+      <span id="success-msg"></span>
+    </div>
+    <div id="alert-error" class="alert alert-error">
+      <h4>Something went wrong</h4>
+      <span id="error-msg">Please try again or contact your building manager.</span>
+    </div>
+    <p class="section-label">1. Choose a space</p>
+    <div class="resources-grid">
+      <div class="resource-card" onclick="selectResource(this, 'Basement Meeting Room')" data-resource="Basement Meeting Room">
+        <div class="check">✓</div>
+        <h3>Basement meeting room</h3>
+        <p>Enclosed meeting room with table and chairs etc.</p>
+        <div class="resource-meta">
+          <span class="tag">Up to 10 people</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="selectResource(this, 'Basement Restaurant Area')" data-resource="Basement Restaurant Area">
+        <div class="check">✓</div>
+        <h3>Basement restaurant area</h3>
+        <p>Flexible dining space ideal for company breakfasts and social events.</p>
+        <div class="resource-meta">
+          <span class="tag">Up to 50 people</span>
+          <span class="tag">Kitchen access</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="selectResource(this, 'Rooftop Terrace')" data-resource="Rooftop Terrace">
+        <div class="check">✓</div>
+        <h3>Rooftop terrace</h3>
+        <p>Open-air rooftop with seating and city views. Great for summer events.</p>
+        <div class="resource-meta">
+          <span class="tag">Up to 50 people</span>
+          <span class="tag">Outdoor</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-label">2. Pick date &amp; time</p>
+    <div class="booking-form">
+      <div class="form-row">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="date" onchange="onDateChange()" />
+        </div>
+        <div class="field">
+          <label>Duration</label>
+          <select id="duration" onchange="onDurationChange()">
+            <option value="1">1 hour</option>
+            <option value="2" selected>2 hours</option>
+            <option value="3">3 hours</option>
+            <option value="4">4 hours</option>
+            <option value="24">Full day</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="time-section" id="time-section">
+        <div class="field">
+          <label>Start time</label>
+          <p class="time-label">Select an available slot</p>
+          <div class="time-grid" id="time-grid"></div>
+          <div class="slots-legend" style="margin-top:8px;">
+            <span><span class="dot" style="background:var(--accent)"></span>Selected</span>
+            <span><span class="dot" style="background:#eee; border:1px solid #ddd;"></span>Available</span>
+            <span><span class="dot" style="background:rgba(26,26,24,0.08)"></span>Booked</span>
+          </div>
+        </div>
+      </div>
+      <div class="fullday-notice" id="fullday-notice">
+        Full day booking — the space will be reserved for the entire day (00:00–24:00).
+      </div>
+
+      <div class="summary-box" id="summary-box">
+        Booking <strong id="sum-resource">—</strong> on <strong id="sum-date">—</strong> from <strong id="sum-time">—</strong>
+      </div>
+
+    </div>
+
+    <p class="section-label" style="margin-top:0.5rem;">3. Your details</p>
+    <div class="booking-form">
+      <div class="form-row">
+        <div class="field">
+          <label>Your name</label>
+          <input type="text" id="name" placeholder="Full name" />
+        </div>
+        <div class="field">
+          <label>Company</label>
+          <input type="text" id="company" placeholder="Your company" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@company.com" />
+      </div>
+      <div class="field">
+        <label>Purpose / notes (optional)</label>
+        <textarea id="notes" placeholder="Team lunch, board meeting, client visit…"></textarea>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitBooking()">
+        Confirm booking
+      </button>
+    </div>
+
+  </div><!-- end panel-book -->
+
+  <!-- VIEW PANEL -->
+  <div class="panel" id="panel-view">
+    <div class="filter-bar">
+      <div class="field">
+        <label>Filter by space</label>
+        <select id="filter-resource" onchange="loadBookings()">
+          <option value="">All spaces</option>
+          <option>Basement Meeting Room</option>
+          <option>Basement Restaurant Area</option>
+          <option>Rooftop Terrace</option>
+        </select>
+      </div>
+    </div>
+    <div id="bookings-list" class="bookings-list"></div>
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+// Replace this URL with your deployed Google Apps Script Web App URL
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxucbg1gjRmLHUJVH5qAiDsrB38lvLOx-q9XGIzrRbZ_T0w_5k6U95GAa4IrvoUkDXFVA/exec';
+
+const HOURS = [];
+for (let h = 7; h <= 20; h++) {
+  HOURS.push(`${String(h).padStart(2,'0')}:00`);
+  if (h < 20) HOURS.push(`${String(h).padStart(2,'0')}:30`);
+}
+
+let selectedResource = null;
+let selectedTime = null;
+let bookedSlots = [];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('date').value = today;
+  renderTimeGrid();
+  loadBookings();
+})();
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'book') || (i === 1 && tab === 'view'));
+  });
+  document.getElementById('panel-book').classList.toggle('active', tab === 'book');
+  document.getElementById('panel-view').classList.toggle('active', tab === 'view');
+  if (tab === 'view') loadBookings();
+}
+
+// ─── RESOURCE SELECTION ───────────────────────────────────────────────────────
+function selectResource(el, name) {
+  document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedResource = name;
+  onDateChange();
+}
+
+// ─── TIME GRID ────────────────────────────────────────────────────────────────
+function renderTimeGrid(booked = []) {
+  const grid = document.getElementById('time-grid');
+  const duration = parseInt(document.getElementById('duration').value);
+  grid.innerHTML = '';
+  selectedTime = null;
+
+  HOURS.forEach(slot => {
+    const div = document.createElement('div');
+    div.className = 'time-slot';
+    div.textContent = slot;
+    const isBooked = isSlotBooked(slot, duration, booked);
+    if (isBooked) {
+      div.classList.add('booked');
+      div.title = 'Already booked';
+    } else {
+      div.onclick = () => selectTime(div, slot);
+    }
+    grid.appendChild(div);
+  });
+  updateSummary();
+}
+
+function isSlotBooked(startSlot, duration, booked) {
+  const startMins = toMins(startSlot);
+  const endMins = startMins + duration * 60;
+  return booked.some(b => {
+    const bStart = toMins(b.start);
+    const bEnd = toMins(b.end);
+    return startMins < bEnd && endMins > bStart;
+  });
+}
+
+function toMins(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function addMins(timeStr, mins) {
+  let total = toMins(timeStr) + mins;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function selectTime(el, slot) {
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTime = slot;
+  updateSummary();
+}
+
+function updateSummary() {
+  const box = document.getElementById('summary-box');
+  const date = document.getElementById('date').value;
+  const duration = document.getElementById('duration').value;
+  if (selectedResource && selectedTime && date) {
+    const endTime = addMins(selectedTime, parseInt(duration) * 60);
+    document.getElementById('sum-resource').textContent = selectedResource;
+    document.getElementById('sum-date').textContent = formatDate(date);
+    document.getElementById('sum-time').textContent = `${selectedTime} – ${endTime}`;
+    box.classList.add('visible');
+  } else {
+    box.classList.remove('visible');
+  }
+}
+
+function onDurationChange() {
+  const isFullDay = document.getElementById('duration').value === '24';
+  document.getElementById('time-section').classList.toggle('hidden', isFullDay);
+  document.getElementById('fullday-notice').classList.toggle('visible', isFullDay);
+  if (isFullDay) {
+    selectedTime = '00:00';
+  } else {
+    selectedTime = null;
+  }
+  updateSummary();
+}
+
+function onDateChange() {
+  const isFullDay = document.getElementById('duration').value === '24';
+  if (isFullDay) {
+    selectedTime = '00:00';
+    updateSummary();
+    return;
+  }
+  selectedTime = null;
+  if (selectedResource) {
+    fetchAvailability();
+  } else {
+    renderTimeGrid();
+  }
+}
+
+// ─── API CALLS ────────────────────────────────────────────────────────────────
+async function fetchAvailability() {
+  const date = document.getElementById('date').value;
+  if (!date || !selectedResource) return;
+
+  try {
+    const url = `${SCRIPT_URL}?action=getBookings&resource=${encodeURIComponent(selectedResource)}&date=${date}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    bookedSlots = data.bookings || [];
+    renderTimeGrid(bookedSlots);
+  } catch (e) {
+    renderTimeGrid([]);
+  }
+}
+
+async function submitBooking() {
+  const name = document.getElementById('name').value.trim();
+  const company = document.getElementById('company').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const date = document.getElementById('date').value;
+  const duration = document.getElementById('duration').value;
+
+  hideAlerts();
+
+  if (!selectedResource) return alert('Please select a space.');
+  if (!date) return alert('Please select a date.');
+  if (!selectedTime) { if (duration === '24') { selectedTime = '00:00'; } else return alert('Please select a start time.'); }
+  if (!name) return alert('Please enter your name.');
+  if (!company) return alert('Please enter your company.');
+  if (!email || !email.includes('@')) return alert('Please enter a valid email.');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Confirming…';
+
+  const endTime = addMins(selectedTime, parseInt(duration) * 60);
+  const payload = {
+    action: 'addBooking',
+    resource: selectedResource,
+    date, start: selectedTime, end: endTime,
+    name, company, email,
+    notes: document.getElementById('notes').value.trim()
+  };
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('success-msg').textContent =
+        `${selectedResource} on ${formatDate(date)}, ${selectedTime}–${endTime}. A summary has been sent to ${email}.`;
+      showAlert('success');
+      resetForm();
+    } else {
+      document.getElementById('error-msg').textContent = data.error || 'Please try again.';
+      showAlert('error');
+    }
+  } catch (e) {
+    document.getElementById('error-msg').textContent = 'Could not reach the server. Please check your connection.';
+    showAlert('error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Confirm booking';
+}
+
+async function loadBookings() {
+  const resource = document.getElementById('filter-resource').value;
+  const list = document.getElementById('bookings-list');
+  list.innerHTML = '<div class="empty-state">Loading…</div>';
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    // Try getFutureBookings first; fall back to getAllBookings for older deployments
+    let url = `${SCRIPT_URL}?action=getFutureBookings&from=${today}`;
+    if (resource) url += `&resource=${encodeURIComponent(resource)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) {
+      // Older deployment — fall back to getAllBookings with today's date
+      let fallbackUrl = `${SCRIPT_URL}?action=getAllBookings&date=${today}`;
+      if (resource) fallbackUrl += `&resource=${encodeURIComponent(resource)}`;
+      const res2 = await fetch(fallbackUrl);
+      const data2 = await res2.json();
+      renderBookingsList(data2.bookings || []);
+    } else {
+      renderBookingsList(data.bookings || []);
+    }
+  } catch (e) {
+    renderBookingsList([]);
+  }
+}
+
+// ─── RENDER HELPERS ───────────────────────────────────────────────────────────
+function renderBookingsList(bookings) {
+  const list = document.getElementById('bookings-list');
+  if (!bookings.length) {
+    list.innerHTML = '<div class="empty-state">📭<p>No upcoming bookings.</p></div>';
+    return;
+  }
+  bookings.sort((a,b) => (a.date + a.start).localeCompare(b.date + b.start));
+  list.innerHTML = bookings.map(b => `
+    <div class="booking-item">
+      <div class="booking-dot"></div>
+      <div class="booking-info">
+        <h4>${b.resource}</h4>
+        <p>${b.name} · ${b.company}</p>
+        ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
+      </div>
+      <div class="booking-time">
+        <div style="font-weight:500;">${formatDate(b.date)}</div>
+        <div>${formatTime(b.start)}–${formatTime(b.end)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// Handles both "14:00" strings and full ISO timestamps from Google Sheets
+function formatTime(val) {
+  if (!val) return '';
+  if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) return val.slice(0, 5);
+  const d = new Date(val);
+  if (!isNaN(d)) return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
+  return val;
+}
+
+function showAlert(type) {
+  document.getElementById(`alert-${type}`).classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideAlerts() {
+  document.querySelectorAll('.alert').forEach(a => a.classList.remove('show'));
+}
+
+function resetForm() {
+  selectedResource = null;
+  selectedTime = null;
+  document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('name').value = '';
+  document.getElementById('company').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('notes').value = '';
+  renderTimeGrid();
+}
+</script>
+
+</body>
+</html>
