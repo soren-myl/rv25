@@ -540,7 +540,7 @@
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqJGUwkOv7J97c2-JSsMEy0coO1kiGkXoa2K95NQJ0LzI2LhaHtVGG2Sqtstrk-FkOOA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2hCXxPV-ba_uoKDsFjdVcsrVYHtW-fi2-rS73rljFivNxjmJ4F0rQXsqOv5AEx6L9Ig/exec';
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -556,6 +556,7 @@ let bookedSlots = [];
 (function init() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('date').value = today;
+  document.getElementById('date').min = today;
   renderTimeGrid();
   loadBookings();
 })();
