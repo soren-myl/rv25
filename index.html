@@ -677,7 +677,6 @@ async function refreshCache() {
       allBookings = data.bookings || [];
     }
     cacheLoaded = true;
-    console.log('Cache loaded:', JSON.stringify(allBookings.slice(0,3)));
   } catch(e) {
     allBookings = [];
     cacheLoaded = true; // mark loaded even on error so UI doesn't hang
@@ -969,7 +968,6 @@ async function lookupBooking() {
   if (!id) { showCancelMsg('Please enter a booking reference.', 'error'); return; }
 
   // First try the local cache — instant, no API call needed
-  console.log('Looking for id:', id, '| Cache ids:', allBookings.map(b => b.id));
   if (cacheLoaded) {
     const cached = allBookings.find(b => b.id && b.id.toUpperCase() === id);
     if (cached) {
