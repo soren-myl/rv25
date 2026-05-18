@@ -1036,7 +1036,7 @@ async function confirmCancel() {
 
 function showCancelMsg(text, type) {
   const msg = document.getElementById('cancel-msg');
-  msg.textContent = text;
+  msg.innerHTML = text;
   msg.className = `cancel-msg show ${type}`;
 }
 
