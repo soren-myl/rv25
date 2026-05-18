@@ -899,7 +899,7 @@ async function submitBooking() {
         `${selectedResource} on ${formatDate(date)}, ${selectedTime}–${endTime}. A summary has been sent to ${email}.`;
       showAlert('success');
       resetForm();
-      refreshCache(); // update cache with new booking
+      refreshCache().then(() => { renderBookingsFromCache(); if (selectedResource) updateTimeGridFromCache(); }); // update cache with new booking
     } else {
       document.getElementById('error-msg').textContent = data.error || 'Please try again.';
       showAlert('error');
@@ -1004,7 +1004,7 @@ async function confirmCancel() {
       document.getElementById('cancel-result').classList.remove('visible');
       document.getElementById('cancel-id').value = '';
       showCancelMsg('Booking cancelled. A confirmation has been sent by email.', 'success');
-      refreshCache();
+      refreshCache().then(() => { renderBookingsFromCache(); if (selectedResource) updateTimeGridFromCache(); });
     } else {
       showCancelMsg(data.error || 'Could not cancel. Please try again.', 'error');
     }
