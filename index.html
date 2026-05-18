@@ -319,16 +319,7 @@
     padding: 1.5rem;
     margin-top: 2rem;
   }
-  .cancel-box h3 {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--ink);
-    margin-bottom: 1rem;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
+
   .cancel-lookup {
     display: flex;
     gap: 10px;
@@ -487,6 +478,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('book')">Make a booking</button>
     <button class="tab-btn" onclick="switchTab('view')">View bookings</button>
+    <button class="tab-btn" onclick="switchTab('cancel')">Cancel booking</button>
   </div>
 
   <!-- BOOK PANEL -->
@@ -612,6 +604,20 @@
     </div>
     <div id="bookings-list" class="bookings-list"></div>
 
+  </div><!-- end panel-book -->
+
+  <!-- VIEW PANEL -->
+  <div class="panel" id="panel-view">
+    <div class="filter-bar">
+      <div class="field">
+        <label>Show</label>
+        <select id="filter-month" onchange="loadBookings()">
+          <option value="">All upcoming</option>
+        </select>
+      </div>
+    </div>
+    <div id="bookings-list" class="bookings-list"></div>
+
     <div class="cancel-box">
       <h3>Cancel a booking</h3>
       <div class="cancel-lookup">
@@ -628,12 +634,30 @@
       <div class="cancel-msg" id="cancel-msg"></div>
     </div>
   </div>
+  <!-- CANCEL PANEL -->
+  <div class="panel" id="panel-cancel">
+    <div class="cancel-box" style="margin-top:0;">
+      <div class="cancel-lookup">
+        <div class="field">
+          <label>Booking reference</label>
+          <input type="text" id="cancel-id" placeholder="e.g. E49D2AC3" style="text-transform:uppercase;" />
+        </div>
+        <button class="btn-lookup" onclick="lookupBooking()">Look up</button>
+      </div>
+      <div class="cancel-result" id="cancel-result">
+        <div class="cancel-details" id="cancel-details"></div>
+        <button class="btn-cancel-confirm" id="cancel-confirm-btn" onclick="confirmCancel()">Cancel this booking</button>
+      </div>
+      <div class="cancel-msg" id="cancel-msg"></div>
+    </div>
+  </div>
+
 </main>
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqJGUwkOv7J97c2-JSsMEy0coO1kiGkXoa2K95NQJ0LzI2LhaHtVGG2Sqtstrk-FkOOA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHq4FQK3E1Ig7U8zXe7ctnbgVJtEZskTyTeqv_e1Q1jq3qRjwLE7I1cG8pqJTDK-pQYg/exec';
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -657,10 +681,15 @@ let bookedSlots = [];
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    b.classList.toggle('active', (i === 0 && tab === 'book') || (i === 1 && tab === 'view'));
+    b.classList.toggle('active',
+      (i === 0 && tab === 'book') ||
+      (i === 1 && tab === 'view') ||
+      (i === 2 && tab === 'cancel')
+    );
   });
   document.getElementById('panel-book').classList.toggle('active', tab === 'book');
   document.getElementById('panel-view').classList.toggle('active', tab === 'view');
+  document.getElementById('panel-cancel').classList.toggle('active', tab === 'cancel');
   if (tab === 'view') loadBookings();
 }
 
