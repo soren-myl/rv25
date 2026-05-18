@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book a Space</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A1A18'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='serif' fill='%2352B788'>25</text></svg>">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -342,11 +343,11 @@
   }
   .bookings-group { margin-bottom: 1.5rem; }
   .bookings-group-header {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--ink-light);
+    color: var(--ink);
     padding: 0 0 8px 0;
     border-bottom: 1px solid var(--border);
     margin-bottom: 8px;
@@ -540,7 +541,7 @@
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace this URL with your deployed Google Apps Script Web App URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHq4FQK3E1Ig7U8zXe7ctnbgVJtEZskTyTeqv_e1Q1jq3qRjwLE7I1cG8pqJTDK-pQYg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqJGUwkOv7J97c2-JSsMEy0coO1kiGkXoa2K95NQJ0LzI2LhaHtVGG2Sqtstrk-FkOOA/exec';
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -820,9 +821,9 @@ function renderBookingsList(bookings) {
             <p>${b.name} · ${b.company}</p>
             ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
           </div>
-          <div class="booking-time">
-            <div style="font-weight:500;">${formatDate(b.date)}</div>
-            <div>${formatTime(b.start)}–${formatTime(b.end)}</div>
+          <div class="booking-time" style="display:flex;gap:1.5rem;align-items:center;">
+            <div style="font-weight:500;white-space:nowrap;">${formatDate(b.date)}</div>
+            <div style="white-space:nowrap;">${formatTime(b.start)}–${formatTime(b.end)}</div>
           </div>
         </div>`).join('')}
     </div>`;
