@@ -624,7 +624,7 @@
     <div class="cancel-box" style="margin-top:0;">
       <div class="cancel-lookup">
         <div class="field">
-          <label>BOOKING REFERENCE (you can find this in your booking confirmation email)</label>
+          <label>Booking reference (you can find this in your booking confirmation email)</label>
           <input type="text" id="cancel-id" placeholder="e.g. E49D2AC3" style="text-transform:uppercase;" />
         </div>
         <button class="btn-lookup" onclick="lookupBooking()">Look up</button>
@@ -641,8 +641,8 @@
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-// Replace this URL with your deployed Google Apps Script Web App URL
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHq4FQK3E1Ig7U8zXe7ctnbgVJtEZskTyTeqv_e1Q1jq3qRjwLE7I1cG8pqJTDK-pQYg/exec';
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 const HOURS = [];
 for (let h = 7; h <= 20; h++) {
@@ -654,13 +654,63 @@ let selectedResource = null;
 let selectedTime = null;
 let bookedSlots = [];
 
+// ─── CENTRAL CACHE ────────────────────────────────────────────────────────────
+// allBookings: all future bookings fetched once and reused everywhere
+let allBookings = [];
+let cacheLoaded = false;
+let cacheLoading = false;
+let cacheCallbacks = []; // queued callbacks waiting for first load
+
+async function refreshCache() {
+  cacheLoading = true;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const url = `${SCRIPT_URL}?action=getFutureBookings&from=${today}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) {
+      const res2 = await fetch(`${SCRIPT_URL}?action=getAllBookings&date=${today}`);
+      const data2 = await res2.json();
+      allBookings = data2.bookings || [];
+    } else {
+      allBookings = data.bookings || [];
+    }
+    cacheLoaded = true;
+  } catch(e) {
+    allBookings = [];
+    cacheLoaded = true; // mark loaded even on error so UI doesn't hang
+  }
+  cacheLoading = false;
+  // Resolve any waiting callbacks
+  cacheCallbacks.forEach(cb => cb());
+  cacheCallbacks = [];
+}
+
+// Returns a promise that resolves when cache is ready
+function whenCacheReady() {
+  if (cacheLoaded) return Promise.resolve();
+  return new Promise(resolve => cacheCallbacks.push(resolve));
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 (function init() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('date').value = today;
   document.getElementById('date').min = today;
   renderTimeGrid();
-  loadBookings();
+  // Pre-fetch all data immediately on page load
+  refreshCache().then(() => {
+    // If view tab is active render it; always update time grid if resource selected
+    renderBookingsFromCache();
+    if (selectedResource) updateTimeGridFromCache();
+  });
+  // Auto-refresh every 5 minutes
+  setInterval(() => {
+    refreshCache().then(() => {
+      renderBookingsFromCache();
+      if (selectedResource) updateTimeGridFromCache();
+    });
+  }, REFRESH_INTERVAL);
 })();
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
@@ -675,7 +725,7 @@ function switchTab(tab) {
   document.getElementById('panel-book').classList.toggle('active', tab === 'book');
   document.getElementById('panel-view').classList.toggle('active', tab === 'view');
   document.getElementById('panel-cancel').classList.toggle('active', tab === 'cancel');
-  if (tab === 'view') loadBookings();
+  if (tab === 'view') renderBookingsFromCache();
 }
 
 // ─── RESOURCE SELECTION ───────────────────────────────────────────────────────
@@ -786,18 +836,25 @@ function onDateChange() {
 }
 
 // ─── API CALLS ────────────────────────────────────────────────────────────────
+function updateTimeGridFromCache() {
+  const date = document.getElementById('date').value;
+  if (!date || !selectedResource) return;
+  bookedSlots = allBookings.filter(b =>
+    b.resource === selectedResource && b.date === date
+  ).map(b => ({ start: b.start, end: b.end }));
+  renderTimeGrid(bookedSlots);
+}
+
 async function fetchAvailability() {
   const date = document.getElementById('date').value;
   if (!date || !selectedResource) return;
-
-  try {
-    const url = `${SCRIPT_URL}?action=getBookings&resource=${encodeURIComponent(selectedResource)}&date=${date}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    bookedSlots = data.bookings || [];
-    renderTimeGrid(bookedSlots);
-  } catch (e) {
-    renderTimeGrid([]);
+  if (cacheLoaded) {
+    // Use cache — instant
+    updateTimeGridFromCache();
+  } else {
+    // Cache not ready yet — wait for it
+    await whenCacheReady();
+    updateTimeGridFromCache();
   }
 }
 
@@ -842,6 +899,7 @@ async function submitBooking() {
         `${selectedResource} on ${formatDate(date)}, ${selectedTime}–${endTime}. A summary has been sent to ${email}.`;
       showAlert('success');
       resetForm();
+      refreshCache(); // update cache with new booking
     } else {
       document.getElementById('error-msg').textContent = data.error || 'Please try again.';
       showAlert('error');
@@ -856,33 +914,24 @@ async function submitBooking() {
 }
 
 async function loadBookings() {
-  const filterMonth = document.getElementById('filter-month').value;
   const list = document.getElementById('bookings-list');
-  list.innerHTML = '<div class="empty-state">Loading…</div>';
-
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    let url = `${SCRIPT_URL}?action=getFutureBookings&from=${today}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    let bookings = [];
-    if (data.error) {
-      const res2 = await fetch(`${SCRIPT_URL}?action=getAllBookings&date=${today}`);
-      const data2 = await res2.json();
-      bookings = data2.bookings || [];
-    } else {
-      bookings = data.bookings || [];
-    }
-    // Populate month filter from actual bookings
-    populateMonthFilter(bookings);
-    // Apply month filter if set
-    if (filterMonth) {
-      bookings = bookings.filter(b => b.date && b.date.slice(0, 7) === filterMonth);
-    }
-    renderBookingsList(bookings);
-  } catch (e) {
-    renderBookingsList([]);
+  if (!cacheLoaded) {
+    list.innerHTML = '<div class="empty-state">Loading…</div>';
+    await whenCacheReady();
   }
+  renderBookingsFromCache();
+}
+
+function renderBookingsFromCache() {
+  // Only render if view panel is visible
+  if (!document.getElementById('panel-view').classList.contains('active')) return;
+  const filterMonth = document.getElementById('filter-month').value;
+  let bookings = [...allBookings];
+  populateMonthFilter(bookings);
+  if (filterMonth) {
+    bookings = bookings.filter(b => b.date && b.date.slice(0, 7) === filterMonth);
+  }
+  renderBookingsList(bookings);
 }
 
 function populateMonthFilter(bookings) {
@@ -955,7 +1004,7 @@ async function confirmCancel() {
       document.getElementById('cancel-result').classList.remove('visible');
       document.getElementById('cancel-id').value = '';
       showCancelMsg('Booking cancelled. A confirmation has been sent by email.', 'success');
-      loadBookings();
+      refreshCache();
     } else {
       showCancelMsg(data.error || 'Could not cancel. Please try again.', 'error');
     }
