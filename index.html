@@ -377,6 +377,7 @@
   .cancel-msg.show { display: block; }
   .cancel-msg.success { background: var(--accent-light); color: var(--accent); }
   .cancel-msg.error { background: var(--warn-light); color: var(--warn); }
+  .cancel-msg.info { background: rgba(26,26,24,0.05); color: var(--ink-light); display:flex; align-items:center; gap:8px; }
 
   /* VIEW BOOKINGS PANEL */
   .filter-bar {
@@ -966,12 +967,30 @@ async function lookupBooking() {
 
   if (!id) { showCancelMsg('Please enter a booking reference.', 'error'); return; }
 
+  // First try the local cache — instant, no API call needed
+  if (cacheLoaded) {
+    const cached = allBookings.find(b => b.id && b.id.toUpperCase() === id);
+    if (cached) {
+      foundBooking = cached;
+      details.innerHTML = `
+        <strong>${foundBooking.resource}</strong><br>
+        ${formatDate(foundBooking.date)} &nbsp;·&nbsp; ${formatTime(foundBooking.start)}–${formatTime(foundBooking.end)}<br>
+        ${foundBooking.name} &nbsp;·&nbsp; ${foundBooking.company}
+      `;
+      result.classList.add('visible');
+      return;
+    }
+  }
+
+  // Not in cache (e.g. past booking or cache not yet loaded) — fall back to API
+  showCancelMsg('<span class="spinner" style="border-color:rgba(0,0,0,0.2);border-top-color:var(--ink);"></span> Looking up your booking…', 'info');
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'lookupBooking', id })
     });
     const data = await res.json();
+    msg.className = 'cancel-msg'; // clear spinner
     if (data.error || !data.booking) {
       showCancelMsg('No booking found with that reference. Please check and try again.', 'error');
       return;
