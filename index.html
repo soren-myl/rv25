@@ -904,7 +904,10 @@ async function lookupBooking() {
   if (!id) { showCancelMsg('Please enter a booking reference.', 'error'); return; }
 
   try {
-    const res = await fetch(`${SCRIPT_URL}?action=lookupBooking&id=${encodeURIComponent(id)}`);
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'lookupBooking', id })
+    });
     const data = await res.json();
     if (data.error || !data.booking) {
       showCancelMsg('No booking found with that reference. Please check and try again.', 'error');
