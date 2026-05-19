@@ -425,6 +425,10 @@
     padding: 3rem 1rem;
     color: var(--ink-light);
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
   .empty-state p { margin-top: 8px; }
 
@@ -632,7 +636,7 @@
       </div>
       <div class="cancel-result" id="cancel-result">
         <div class="cancel-details" id="cancel-details"></div>
-        <button class="btn-cancel-confirm" id="cancel-confirm-btn" onclick="confirmCancel()">Cancel this booking</button>
+<button class="btn-cancel-confirm" id="cancel-confirm-btn" onclick="confirmCancel()">Cancel this booking</button>
       </div>
       <div class="cancel-msg" id="cancel-msg"></div>
     </div>
@@ -917,7 +921,7 @@ async function submitBooking() {
 async function loadBookings() {
   const list = document.getElementById('bookings-list');
   if (!cacheLoaded) {
-    list.innerHTML = '<div class="empty-state">Loading…</div>';
+    list.innerHTML = '<div class="empty-state"><span class="spinner" style="border-color:rgba(0,0,0,0.15);border-top-color:var(--ink-light);"></span> Looking up bookings…</div>';
     await whenCacheReady();
   }
   renderBookingsFromCache();
@@ -1009,7 +1013,7 @@ async function lookupBooking() {
 
 async function confirmCancel() {
   if (!foundBooking) return;
-  const btn = document.getElementById('cancel-confirm-btn');
+const btn = document.getElementById('cancel-confirm-btn');
   btn.disabled = true;
   btn.textContent = 'Cancelling…';
 
