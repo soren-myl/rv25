@@ -1067,7 +1067,8 @@ function renderBookingsList(bookings) {
 
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const base = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  return `${base} ${d.getFullYear()}`;
 }
 
 // Handles both "14:00" strings and full ISO timestamps from Google Sheets
