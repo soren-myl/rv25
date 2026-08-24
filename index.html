@@ -420,6 +420,14 @@
     border-bottom: 1px solid var(--border);
     margin-bottom: 8px;
   }
+ .bookings-year-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--ink-light);
+  margin: 16px 0 8px;
+}
+.bookings-group-header + .bookings-year-header { margin-top: 0; }
   .empty-state {
     text-align: center;
     padding: 3rem 1rem;
@@ -1046,20 +1054,24 @@ function renderBookingsList(bookings) {
   RESOURCES.forEach(resource => {
     const group = bookings.filter(b => b.resource === resource);
     if (!group.length) return;
+    const years = [...new Set(group.map(b => b.date.slice(0, 4)))];
+
     html += `<div class="bookings-group">
       <div class="bookings-group-header">${resource}</div>
-      ${group.map(b => `
-        <div class="booking-item">
-          <div class="booking-dot"></div>
-          <div class="booking-info">
-            <p>${b.name} · ${b.company}</p>
-            ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
-          </div>
-          <div class="booking-time" style="display:flex;gap:1.5rem;align-items:center;">
-            <div style="font-weight:500;white-space:nowrap;">${formatDate(b.date)}</div>
-            <div style="white-space:nowrap;">${formatTime(b.start)}–${formatTime(b.end)}</div>
-          </div>
-        </div>`).join('')}
+      ${years.map(year => `
+        <div class="bookings-year-header">${year}</div>
+        ${group.filter(b => b.date.slice(0, 4) === year).map(b => `
+          <div class="booking-item">
+            <div class="booking-dot"></div>
+            <div class="booking-info">
+              <p>${b.name} · ${b.company}</p>
+              ${b.notes ? `<p style="font-style:italic;margin-top:2px;">${b.notes}</p>` : ''}
+            </div>
+            <div class="booking-time" style="display:flex;gap:1.5rem;align-items:center;">
+              <div style="font-weight:500;white-space:nowrap;">${formatDate(b.date)}</div>
+              <div style="white-space:nowrap;">${formatTime(b.start)}–${formatTime(b.end)}</div>
+            </div>
+          </div>`).join('')}`).join('')}
     </div>`;
   });
   list.innerHTML = html;
