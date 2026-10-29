@@ -675,6 +675,8 @@ async function refreshCache() {
     } else {
       allBookings = data.bookings || [];
     }
+    // Sheets stores all-digit IDs (e.g. 89262596) as numbers — normalise to strings
+    allBookings = allBookings.map(b => ({ ...b, id: b.id != null ? String(b.id) : '' }));
     cacheLoaded = true;
   } catch(e) {
     allBookings = [];
@@ -968,7 +970,7 @@ async function lookupBooking() {
 
   // First try the local cache — instant, no API call needed
   if (cacheLoaded) {
-    const cached = allBookings.find(b => b.id && b.id.toUpperCase() === id);
+    const cached = allBookings.find(b => b.id && String(b.id).toUpperCase() === id);
     if (cached) {
       foundBooking = cached;
       details.innerHTML = `
@@ -1015,7 +1017,7 @@ const btn = document.getElementById('cancel-confirm-btn');
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'cancelBooking', id: foundBooking.id })
+      body: JSON.stringify({ action: 'cancelBooking', id: String(foundBooking.id) })
     });
     const data = await res.json();
     if (data.success) {
