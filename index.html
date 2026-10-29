@@ -11,6 +11,7 @@
 
   :root {
     --cream: #F5F0E8;
+    --cream-dark: #E9E2D5;
     --ink: #1A1A18;
     --ink-light: #5A5A55;
     --accent: #2D6A4F;
@@ -409,22 +410,25 @@
     text-align: right;
     white-space: nowrap;
   }
-  .bookings-group { margin-bottom: 1.5rem; }
+  .bookings-group { margin-bottom: 2rem; }
   .bookings-group-header {
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--ink);
-    padding: 0 0 8px 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 8px;
+    background: var(--cream-dark);
+    padding: 10px 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 12px;
   }
  .bookings-year-header {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--ink-light);
+  text-align: right;
+  padding-right: 1.25rem;
   margin: 16px 0 8px;
 }
 .bookings-group-header + .bookings-year-header { margin-top: 0; }
